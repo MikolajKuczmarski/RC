@@ -30,7 +30,7 @@ credentials = None
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 #Below is the sheet id
 #You will find this sheet id in the google sheet url
-SAMPLE_SPREADSHEET_ID = '1ELxTQtQyJR8rDWbzm95UtRKtCAzDIcUpSo4xCqW22c8'
+SAMPLE_SPREADSHEET_ID = '1uEnLgHA6PjXny1aiS9oF0gdFxjyIHJPJUomT1yyMfok'
 service = build('sheets', 'v4', credentials=credentials)
 sheet = service.spreadsheets()
 
@@ -72,7 +72,7 @@ def send_data_to_gs():
             'requests': requests
         }
 
-        response = service.spreadsheets().batchUpdate(
+        service.spreadsheets().batchUpdate(
         spreadsheetId=SAMPLE_SPREADSHEET_ID, body=batch_update_request).execute()
 
         data_to_insert = [[key, value] for key, value in results.items()]
@@ -80,19 +80,14 @@ def send_data_to_gs():
         # Define the range where you want to insert the data (e.g., Sheet1!A1:B5 for a 5-row insertion)
         range_to_insert = f'{current_time_str}!A1:B' + str(len(data_to_insert))
 
-        update_result = service.spreadsheets().values().update(
+        service.spreadsheets().values().update(
         spreadsheetId=SAMPLE_SPREADSHEET_ID,
         range=range_to_insert,
         valueInputOption="USER_ENTERED",
         body={"values": data_to_insert}
         ).execute()
 
-        #DataSet = [[1,2,3,4]] #Dataset in the form of array
-        #update_result = service.spreadsheets().values().update(
-        #spreadsheetId=SAMPLE_SPREADSHEET_ID,
-        #range=f'{current_time_str}!A1:D1',  # Make sure the range fits the shape of your data
-        #valueInputOption="USER_ENTERED",
-        #body={"values": DataSet}).execute()
+        print("Data uploaded succefully to google sheets")
     except Exception as X: 
         print(X)
 
