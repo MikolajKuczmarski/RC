@@ -46,7 +46,7 @@ pygame.init()
 screen_info = pygame.display.Info()
 screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.RESIZABLE)
 pygame.display.set_caption("Reversed Correlation Experiment")
-font = pygame.font.Font(pygame.font.match_font('arial'), 40)
+font = pygame.font.Font(pygame.font.match_font('arial'), 20)
 
 def get_scaled_size():
     width, height = screen.get_size()
@@ -112,12 +112,12 @@ async def show_start_page():
     running = True
     while running:
         screen.fill((255, 255, 255))
-        title_font = pygame.font.Font(pygame.font.match_font('arial'), 40)
+        title_font = pygame.font.Font(pygame.font.match_font('arial'), 20)
         text_lines = [
             "Dziękuję za udział w badaniu.",
             "Za chwilę poprosimy Cię o ocenienie serii obrazów twarzy",
             "pod względem określonej cechy.",
-            "Jeśli jesteś gotowy/gotowa, przejdź do następnego kroku."
+            "Jeśli jesteś gotowy, przejdź do następnego kroku."
         ]
         
         text_y = screen.get_height() // 3
@@ -128,7 +128,7 @@ async def show_start_page():
             text_y += 60
 
         button_font = pygame.font.Font(pygame.font.match_font('arial'), 20)
-        button_width, button_height = 200, 50
+        button_width, button_height = 200, 25
         quit_button = pygame.Rect((screen.get_width() // 2 - 220, screen.get_height() - 250), (button_width, button_height))
         next_button = pygame.Rect((screen.get_width() // 2 + 20, screen.get_height() - 250), (button_width, button_height))
         
@@ -172,7 +172,7 @@ async def show_end_page():
     running = True
     while running:
         screen.fill((255, 255, 255))
-        title_font = pygame.font.Font(pygame.font.match_font('arial'), 40)
+        title_font = pygame.font.Font(pygame.font.match_font('arial'), 20)
         text_lines = [
             "Dziękuję za udział w badaniu.",
             "Możesz zamknąć przeglądarkę."
