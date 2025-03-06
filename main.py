@@ -5,6 +5,11 @@ import time
 import asyncio
 import shutil  # Dodano do kopiowania plików
 from PIL import Image
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+from google.oauth2 import service_account 
+import datetime
+
 
 # Konfiguracja programu
 IMAGE_FOLDER = "sinusoidal_noise_scaled"
@@ -12,6 +17,26 @@ OUTPUT_FOLDER = "results"
 CROSS_DURATION = 1000  # ms (1 sekunda)
 BASE_IMAGE_SIZE = 300  # Bazowy rozmiar obrazów (kwadratowy)
 IMAGE_SCALE_FACTOR = 0.2  # Skala obrazów względem szerokości okna
+
+
+results = {}
+
+
+#Google Sheets API
+
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SERVICE_ACCOUNT_FILE = 'credentials.json'
+credentials = None
+credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+#Below is the sheet id
+#You will find this sheet id in the google sheet url
+SAMPLE_SPREADSHEET_ID = '1ELxTQtQyJR8rDWbzm95UtRKtCAzDIcUpSo4xCqW22c8'
+service = build('sheets', 'v4', credentials=credentials)
+sheet = service.spreadsheets()
+
+#
+
+current_time = datetime.datetime.now()
 
 # Tworzenie katalogu na wyniki
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -27,6 +52,51 @@ def get_scaled_size():
     width, height = screen.get_size()
     new_size = int(width * IMAGE_SCALE_FACTOR)
     return (new_size, new_size)
+
+
+def send_data_to_gs():
+    try:               
+        current_time_str = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        requests = [
+        {
+            "addSheet": {
+                "properties": {
+                    "title": current_time_str, 
+                    }
+                }
+            }
+        ]
+
+        # Execute the request to add a new sheet named as current time
+        batch_update_request = {
+            'requests': requests
+        }
+
+        response = service.spreadsheets().batchUpdate(
+        spreadsheetId=SAMPLE_SPREADSHEET_ID, body=batch_update_request).execute()
+
+        data_to_insert = [[key, value] for key, value in results.items()]
+
+        # Define the range where you want to insert the data (e.g., Sheet1!A1:B5 for a 5-row insertion)
+        range_to_insert = f'{current_time_str}!A1:B' + str(len(data_to_insert))
+
+        update_result = service.spreadsheets().values().update(
+        spreadsheetId=SAMPLE_SPREADSHEET_ID,
+        range=range_to_insert,
+        valueInputOption="USER_ENTERED",
+        body={"values": data_to_insert}
+        ).execute()
+
+        #DataSet = [[1,2,3,4]] #Dataset in the form of array
+        #update_result = service.spreadsheets().values().update(
+        #spreadsheetId=SAMPLE_SPREADSHEET_ID,
+        #range=f'{current_time_str}!A1:D1',  # Make sure the range fits the shape of your data
+        #valueInputOption="USER_ENTERED",
+        #body={"values": DataSet}).execute()
+    except Exception as X: 
+        print(X)
+
+
 
 
 
@@ -85,6 +155,7 @@ async def show_start_page():
                     running = False
 
 
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -96,6 +167,8 @@ async def show_start_page():
         await asyncio.sleep(0)
 
 async def show_end_page():
+    send_data_to_gs()
+
     running = True
     while running:
         screen.fill((255, 255, 255))
@@ -163,10 +236,10 @@ async def show_choice_page():
                     pygame.quit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        
+                        results[str(run_index)] = 'a'
                         choice_made = True
                     elif event.key == pygame.K_RIGHT:
-                    
+                        results[str(run_index)] = 'b'
                         choice_made = True
                     run_index += 1
                     await show_cross()
